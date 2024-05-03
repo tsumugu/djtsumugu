@@ -6,7 +6,7 @@ import YouTube, { YouTubeProps } from "react-youtube";
 // };
 
 // function Play(props: Props) {
-function Play() {
+function Player() {
   const [YTPlayer, setYTPlayer] = useState<YT.Player>();
   const onPlayerReady: YouTubeProps["onReady"] = (event) => {
     setYTPlayer(event.target);
@@ -44,4 +44,4 @@ function Play() {
     </>
   );
 }
-export default Play;
+export default Player;
