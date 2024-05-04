@@ -75,13 +75,17 @@ function Player() {
   }, []);
 
   // YTPlayerに関連する
+  const setVideo = (YTPlayer: YT.Player, videoId: string) => {
+    YTPlayer.loadVideoById(videoId);
+  };
+
   const playNext = () => {
     // 次の曲へ
     if (YTPlayer && videoIds) {
       const tmpVideoIds = videoIds;
       tmpVideoIds.shift();
       setVideoIds(tmpVideoIds);
-      YTPlayer.loadVideoById(videoIds[0].videoId);
+      setVideo(YTPlayer, videoIds[0].videoId);
     }
   };
 
@@ -102,7 +106,7 @@ function Player() {
   const onPlayerReady: YouTubeProps["onReady"] = (event) => {
     setYTPlayer(event.target);
     if (videoIds) {
-      event.target.loadVideoById(videoIds[0].videoId);
+      setVideo(event.target, videoIds[0].videoId);
     }
   };
 
