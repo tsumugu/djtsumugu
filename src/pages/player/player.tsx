@@ -44,28 +44,26 @@ function Player() {
         // リスナーが既にある場合はアンサブスクライブする
         unsubscribeRef.current();
       }
-      const q = query(
-        collection(db, "requests"),
-        where("isPlayed", "==", false)
+      unsubscribeRef.current = onSnapshot(
+        query(collection(db, "requests"), where("isPlayed", "==", false)),
+        (querySnapshot) => {
+          const newRequests = querySnapshot
+            .docChanges()
+            .map((change) => {
+              const videoId = change.doc.data().videoId;
+              if (change.type === "added" && videoId) {
+                return {
+                  videoId: videoId,
+                  videoType: VideoType.request,
+                  collectionId: change.doc.id,
+                };
+              }
+              return null;
+            })
+            .filter(Boolean) as mVideo[];
+          setVideoIds(newRequests.concat(videoIdsFromPlaylist));
+        }
       );
-      unsubscribeRef.current = onSnapshot(q, (querySnapshot) => {
-        const newRequests: mVideo[] = [];
-        querySnapshot.docChanges().forEach((change) => {
-          if (change.type === "added") {
-            const newData = change.doc.data();
-            // console.log("New: ", newData);
-            if (newData.videoId) {
-              newRequests.push({
-                videoId: newData.videoId,
-                videoType: VideoType.request,
-                collectionId: change.doc.id,
-              });
-            }
-          }
-        });
-        //
-        setVideoIds(newRequests.concat(videoIdsFromPlaylist));
-      });
     })();
   }, []);
 
