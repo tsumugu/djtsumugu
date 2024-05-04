@@ -1,5 +1,4 @@
 import arrayShuffle from "array-shuffle";
-import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import YouTube, { YouTubeProps } from "react-youtube";
 import { VideoType, mVideo } from "../../type/type";
@@ -26,7 +25,7 @@ function Player() {
       let localVideoIds: mVideo[] = [];
       const PLAYLIST_ID = "RDCLAK5uy_nbK9qSkqYZvtMXH1fLCMmC1yn8HEm0W90"; // released "RDCLAK5uy_nVjU2j4lOFyJicLDWEMjYmBkaejmrsx5M";
       const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${PLAYLIST_ID}&maxResults=200&key=${process.env.REACT_APP_YOUTUBE_API_KEY}`;
-      const response = await axios.get(url);
+      const response = await fetch(url);
       localVideoIds = arrayShuffle(
         /* @ts-ignore */
         response.data.items.map((e) => {
