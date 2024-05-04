@@ -16,7 +16,7 @@ import {
 function Player() {
   const [YTPlayer, setYTPlayer] = useState<YT.Player>();
   const [videoIds, setVideoIds] = useState<mVideo[]>();
-  const videoIndexRef = useRef(0);
+  // const videoIndexRef = useRef(0);
   const unsubscribeRef = useRef<Unsubscribe>();
 
   const fetchVideoIdsFromPlaylist = async () => {
@@ -61,40 +61,54 @@ function Player() {
               return null;
             })
             .filter(Boolean) as mVideo[];
-          setVideoIds(newRequests.concat(videoIdsFromPlaylist));
+          const shiftedVideoIdsFromPlaylist = videoIdsFromPlaylist;
+          shiftedVideoIdsFromPlaylist.shift();
+          setVideoIds(
+            // videoIdsFromPlaylistの0番目 + newRequests + videoIdsFromPlaylistの1番目以降
+            [videoIdsFromPlaylist[0]].concat(
+              newRequests.concat(shiftedVideoIdsFromPlaylist)
+            )
+          );
         }
       );
     })();
   }, []);
 
   // YTPlayerに関連する
+  const playNext = () => {
+    // 次の曲へ
+    if (YTPlayer && videoIds) {
+      const tmpVideoIds = videoIds;
+      tmpVideoIds.shift();
+      setVideoIds(tmpVideoIds);
+      YTPlayer.loadVideoById(videoIds[0].videoId);
+    }
+  };
+
+  const PlayedFlagToTrue = async () => {
+    // リクエストされたものだったら再生済みにする
+    if (
+      videoIds &&
+      videoIds[0].videoType === VideoType.request &&
+      videoIds[0].collectionId
+    ) {
+      const reqRef = doc(db, "requests", videoIds[0].collectionId!);
+      await updateDoc(reqRef, {
+        isPlayed: true,
+      });
+    }
+  };
+
   const onPlayerReady: YouTubeProps["onReady"] = (event) => {
     setYTPlayer(event.target);
     if (videoIds) {
-      console.log(videoIds);
       event.target.loadVideoById(videoIds[0].videoId);
     }
   };
 
-  const onPlayerEnd: YouTubeProps["onEnd"] = async (event) => {
-    if (YTPlayer && videoIds) {
-      // リクエストされたものだったら再生済みにする
-      if (videoIds[videoIndexRef.current].videoType === VideoType.request) {
-        if (videoIds[videoIndexRef.current].collectionId) {
-          const reqRef = doc(
-            db,
-            "requests",
-            videoIds[videoIndexRef.current].collectionId!
-          );
-          await updateDoc(reqRef, {
-            isPlayed: true,
-          });
-        }
-      }
-      // 次を再生
-      videoIndexRef.current += 1;
-      YTPlayer.loadVideoById(videoIds[videoIndexRef.current].videoId);
-    }
+  const onPlayerEnd = async () => {
+    await PlayedFlagToTrue();
+    playNext();
   };
 
   return (
@@ -111,16 +125,7 @@ function Player() {
         onReady={onPlayerReady}
         onEnd={onPlayerEnd}
       />
-      <button
-        onClick={() => {
-          if (YTPlayer && videoIds) {
-            videoIndexRef.current += 1;
-            YTPlayer.loadVideoById(videoIds[videoIndexRef.current].videoId);
-          }
-        }}
-      >
-        次の曲へ
-      </button>
+      <button onClick={onPlayerEnd}>次の曲へ</button>
     </>
   );
 }
