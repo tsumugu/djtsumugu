@@ -77,8 +77,8 @@ function Player() {
 
   const onPlayerEnd: YouTubeProps["onEnd"] = async (event) => {
     if (YTPlayer && videoIds) {
+      // リクエストされたものだったら再生済みにする
       if (videoIds[videoIndexRef.current].videoType === VideoType.request) {
-        // リクエストされたものだったら再生済みにする
         if (videoIds[videoIndexRef.current].collectionId) {
           const reqRef = doc(
             db,
