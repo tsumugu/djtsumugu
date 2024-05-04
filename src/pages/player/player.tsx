@@ -61,14 +61,13 @@ function Player() {
               return null;
             })
             .filter(Boolean) as mVideo[];
+          // 3. 2つの動画IDリストをマージする (videoIdsFromPlaylistの0番目 + newRequests + videoIdsFromPlaylistの1番目以降 という順番になるようにする)
           const shiftedVideoIdsFromPlaylist = videoIdsFromPlaylist;
           shiftedVideoIdsFromPlaylist.shift();
-          setVideoIds(
-            // videoIdsFromPlaylistの0番目 + newRequests + videoIdsFromPlaylistの1番目以降
-            [videoIdsFromPlaylist[0]].concat(
-              newRequests.concat(shiftedVideoIdsFromPlaylist)
-            )
+          const mergedVideoIds = [videoIdsFromPlaylist[0]].concat(
+            newRequests.concat(shiftedVideoIdsFromPlaylist)
           );
+          setVideoIds(mergedVideoIds);
         }
       );
     })();
@@ -89,7 +88,7 @@ function Player() {
     }
   };
 
-  const PlayedFlagToTrue = async () => {
+  const requestPlayedFlagToTrue = async () => {
     // リクエストされたものだったら再生済みにする
     if (
       videoIds &&
@@ -111,7 +110,7 @@ function Player() {
   };
 
   const onPlayerEnd = async () => {
-    await PlayedFlagToTrue();
+    await requestPlayedFlagToTrue();
     playNext();
   };
 
