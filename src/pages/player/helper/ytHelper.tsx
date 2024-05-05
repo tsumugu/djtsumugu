@@ -1,5 +1,5 @@
 import { doc, updateDoc } from "firebase/firestore";
-import { db } from "../..";
+import { db } from "../../..";
 
 // プレイヤーで再生する動画を指定する
 export const loadVideo = (YTPlayer: YT.Player, videoId: string) => {

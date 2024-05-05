@@ -10,8 +10,8 @@ import {
   query,
   where,
 } from "firebase/firestore";
-import { insertArrayInArray } from "../../utils/utils";
-import { loadVideo, playedFlagToTrue } from "./ytHelper";
+import { insertArrayInArray } from "../../util/utils";
+import { loadVideo, playedFlagToTrue } from "./helper/ytHelper";
 
 function Player() {
   const [YTPlayer, setYTPlayer] = useState<YT.Player>();
