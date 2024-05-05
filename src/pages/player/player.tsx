@@ -12,13 +12,19 @@ import {
   updateDoc,
   where,
 } from "firebase/firestore";
+import { insertArrayInArray } from "../../utils/utils";
 
 function Player() {
   const [YTPlayer, setYTPlayer] = useState<YT.Player>();
   const [videoIds, setVideoIds] = useState<mVideo[]>();
-  // const videoIndexRef = useRef(0);
+  const [videoIdsFromPlaylist, setVideoIdsFromPlaylist] = useState<mVideo[]>();
+  const [videoIdsFromRequest, setVideoIdsFromRequest] = useState<mVideo[]>();
   const unsubscribeRef = useRef<Unsubscribe>();
 
+  ////////////////////////////////////
+  // プレイリストとDBから動画を読み込む　//
+  ///////////////////////////////////
+  // 1. プレイリストから動画を読み込む
   const fetchVideoIdsFromPlaylist = async () => {
     const PLAYLIST_ID = "RDCLAK5uy_nbK9qSkqYZvtMXH1fLCMmC1yn8HEm0W90"; // released "RDCLAK5uy_nVjU2j4lOFyJicLDWEMjYmBkaejmrsx5M";
     const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${PLAYLIST_ID}&maxResults=200&key=${process.env.REACT_APP_YOUTUBE_API_KEY}`;
@@ -37,59 +43,66 @@ function Player() {
 
   useEffect(() => {
     (async function () {
-      // 1. プレイリストから動画を読み込む
       const videoIdsFromPlaylist = await fetchVideoIdsFromPlaylist();
-      // 2. firestoreから動画を読み込む (firestoreに追加されたときはvideoIdsに追加する)
-      if (unsubscribeRef.current) {
-        // リスナーが既にある場合はアンサブスクライブする
-        unsubscribeRef.current();
-      }
-      unsubscribeRef.current = onSnapshot(
-        query(collection(db, "requests"), where("isPlayed", "==", false)),
-        (querySnapshot) => {
-          const newRequests = querySnapshot
-            .docChanges()
-            .map((change) => {
-              const videoId = change.doc.data().videoId;
-              if (change.type === "added" && videoId) {
-                return {
-                  videoId: videoId,
-                  videoType: VideoType.request,
-                  collectionId: change.doc.id,
-                };
-              }
-              return null;
-            })
-            .filter(Boolean) as mVideo[];
-          // 3. 2つの動画IDリストをマージする (videoIdsFromPlaylistの0番目 + newRequests + videoIdsFromPlaylistの1番目以降 という順番になるようにする)
-          const shiftedVideoIdsFromPlaylist = videoIdsFromPlaylist;
-          shiftedVideoIdsFromPlaylist.shift();
-          const mergedVideoIds = [videoIdsFromPlaylist[0]].concat(
-            newRequests.concat(shiftedVideoIdsFromPlaylist)
-          );
-          setVideoIds(mergedVideoIds);
-        }
-      );
+      setVideoIdsFromPlaylist(videoIdsFromPlaylist);
     })();
   }, []);
 
-  // YTPlayerに関連する
+  // 2. firestoreから動画を読み込む (firestoreに追加されたときはvideoIdsに追加する)
+  const fetchVideoIdsFromRequest = () => {
+    if (unsubscribeRef.current) {
+      // リスナーが既にある場合はアンサブスクライブする
+      unsubscribeRef.current();
+    }
+    unsubscribeRef.current = onSnapshot(
+      query(collection(db, "requests"), where("isPlayed", "==", false)),
+      (querySnapshot) => {
+        const newRequests = querySnapshot
+          .docChanges()
+          .map((change) => {
+            const videoId = change.doc.data().videoId;
+            if (change.type === "added" && videoId) {
+              return {
+                videoId: videoId,
+                videoType: VideoType.request,
+                collectionId: change.doc.id,
+              };
+            }
+            return null;
+          })
+          .filter(Boolean) as mVideo[];
+        setVideoIdsFromRequest(newRequests);
+      }
+    );
+  };
+
+  useEffect(() => {
+    fetchVideoIdsFromRequest();
+  }, []);
+
+  // 3. 2つの動画IDリストをマージする
+  useEffect(() => {
+    if (videoIdsFromPlaylist && videoIdsFromRequest) {
+      // videoIdsFromPlaylistの0番目 + newRequests + videoIdsFromPlaylistの1番目以降 という順番になるようにする
+      const mergedVideoIds = insertArrayInArray(
+        videoIdsFromPlaylist,
+        videoIdsFromRequest,
+        1
+      );
+      setVideoIds(mergedVideoIds);
+    }
+  }, [videoIdsFromPlaylist, videoIdsFromRequest]);
+
+  ////////////////////////
+  // YTPlayerに関連する　//
+  //////////////////////
+  // プレイヤーで再生する動画を指定する
   const setVideo = (YTPlayer: YT.Player, videoId: string) => {
     YTPlayer.loadVideoById(videoId);
   };
 
-  const playNext = () => {
-    // 次の曲へ
-    if (YTPlayer && videoIds) {
-      const tmpVideoIds = videoIds;
-      tmpVideoIds.shift();
-      setVideoIds(tmpVideoIds);
-      setVideo(YTPlayer, videoIds[0].videoId);
-    }
-  };
-
+  // リクエストされたものだったら再生済みにする
   const requestPlayedFlagToTrue = async () => {
-    // リクエストされたものだったら再生済みにする
     if (
       videoIds &&
       videoIds[0].videoType === VideoType.request &&
@@ -102,6 +115,17 @@ function Player() {
     }
   };
 
+  // 次の曲へ行くときに呼び出す関数
+  const playNext = () => {
+    if (YTPlayer && videoIds) {
+      const tmpVideoIds = videoIds;
+      tmpVideoIds.shift();
+      setVideoIds(tmpVideoIds);
+      setVideo(YTPlayer, videoIds[0].videoId);
+    }
+  };
+
+  // プレイヤーの準備が完了したときに呼び出される関数
   const onPlayerReady: YouTubeProps["onReady"] = (event) => {
     setYTPlayer(event.target);
     if (videoIds) {
@@ -109,6 +133,7 @@ function Player() {
     }
   };
 
+  // プレイヤーの再生が終わったときに呼び出される関数
   const onPlayerEnd = async () => {
     await requestPlayedFlagToTrue();
     playNext();
