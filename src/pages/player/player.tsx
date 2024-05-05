@@ -13,6 +13,7 @@ import {
   where,
 } from "firebase/firestore";
 import { insertArrayInArray } from "../../utils/utils";
+import { loadVideo, playedFlagToTrue } from "./ytHelper";
 
 function Player() {
   const [YTPlayer, setYTPlayer] = useState<YT.Player>();
@@ -96,32 +97,13 @@ function Player() {
   ////////////////////////
   // YTPlayerに関連する　//
   //////////////////////
-  // プレイヤーで再生する動画を指定する
-  const setVideo = (YTPlayer: YT.Player, videoId: string) => {
-    YTPlayer.loadVideoById(videoId);
-  };
-
-  // リクエストされたものだったら再生済みにする
-  const requestPlayedFlagToTrue = async () => {
-    if (
-      videoIds &&
-      videoIds[0].videoType === VideoType.request &&
-      videoIds[0].collectionId
-    ) {
-      const reqRef = doc(db, "requests", videoIds[0].collectionId!);
-      await updateDoc(reqRef, {
-        isPlayed: true,
-      });
-    }
-  };
-
   // 次の曲へ行くときに呼び出す関数
   const playNext = () => {
     if (YTPlayer && videoIds) {
       const tmpVideoIds = videoIds;
       tmpVideoIds.shift();
       setVideoIds(tmpVideoIds);
-      setVideo(YTPlayer, videoIds[0].videoId);
+      loadVideo(YTPlayer, videoIds[0].videoId);
     }
   };
 
@@ -129,13 +111,19 @@ function Player() {
   const onPlayerReady: YouTubeProps["onReady"] = (event) => {
     setYTPlayer(event.target);
     if (videoIds) {
-      setVideo(event.target, videoIds[0].videoId);
+      loadVideo(event.target, videoIds[0].videoId);
     }
   };
 
   // プレイヤーの再生が終わったときに呼び出される関数
   const onPlayerEnd = async () => {
-    await requestPlayedFlagToTrue();
+    if (
+      videoIds &&
+      videoIds[0].videoType === VideoType.request &&
+      videoIds[0].collectionId
+    ) {
+      await playedFlagToTrue(videoIds[0].collectionId!);
+    }
     playNext();
   };
 
