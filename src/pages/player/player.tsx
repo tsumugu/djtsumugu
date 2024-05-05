@@ -18,7 +18,6 @@ function Player() {
   const [videoIds, setVideoIds] = useState<mVideo[]>();
   const [videoIdsFromPlaylist, setVideoIdsFromPlaylist] = useState<mVideo[]>();
   const [videoIdsFromRequest, setVideoIdsFromRequest] = useState<mVideo[]>();
-  const unsubscribeRef = useRef<Unsubscribe>();
 
   ////////////////////////////////////
   // プレイリストとDBから動画を読み込む　//
@@ -49,11 +48,7 @@ function Player() {
 
   // 2. firestoreから動画を読み込む (firestoreに追加されたときはvideoIdsに追加する)
   const fetchVideoIdsFromRequest = () => {
-    if (unsubscribeRef.current) {
-      // リスナーが既にある場合はアンサブスクライブする
-      unsubscribeRef.current();
-    }
-    unsubscribeRef.current = onSnapshot(
+    return onSnapshot(
       query(collection(db, "requests"), where("isPlayed", "==", false)),
       (querySnapshot) => {
         const newRequests = querySnapshot
@@ -76,7 +71,10 @@ function Player() {
   };
 
   useEffect(() => {
-    fetchVideoIdsFromRequest();
+    const unsubscribe = fetchVideoIdsFromRequest();
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   // 3. 2つの動画IDリストをマージする
