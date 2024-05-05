@@ -1,4 +1,5 @@
 export type mVideo = {
+  videoTitle: string;
   videoId: string;
   videoType: VideoType;
   collectionId?: string;

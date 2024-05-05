@@ -26,6 +26,7 @@ function Player() {
       /* @ts-ignore */
       data.items.map((e) => {
         return {
+          videoTitle: e.snippet.title,
           videoId: e.snippet.resourceId.videoId,
           videoType: VideoType.normal,
         };
@@ -48,10 +49,11 @@ function Player() {
         const newRequests = querySnapshot
           .docChanges()
           .map((change) => {
-            const videoId = change.doc.data().videoId;
-            if (change.type === "added" && videoId) {
+            const data = change.doc.data();
+            if (change.type === "added" && data.videoId) {
               return {
-                videoId: videoId,
+                videoTitle: data.videoTitle,
+                videoId: data.videoId,
                 videoType: VideoType.request,
                 collectionId: change.doc.id,
               };
