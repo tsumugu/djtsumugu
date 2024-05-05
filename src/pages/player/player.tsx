@@ -1,15 +1,9 @@
 import arrayShuffle from "array-shuffle";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import YouTube, { YouTubeProps } from "react-youtube";
 import { VideoType, mVideo } from "../../type/type";
 import { db } from "../..";
-import {
-  Unsubscribe,
-  collection,
-  onSnapshot,
-  query,
-  where,
-} from "firebase/firestore";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { insertArrayInArray } from "../../util/utils";
 import { loadVideo, playedFlagToTrue } from "./helper/ytHelper";
 
