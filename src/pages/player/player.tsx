@@ -6,10 +6,8 @@ import { db } from "../..";
 import {
   Unsubscribe,
   collection,
-  doc,
   onSnapshot,
   query,
-  updateDoc,
   where,
 } from "firebase/firestore";
 import { insertArrayInArray } from "../../utils/utils";
