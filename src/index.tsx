@@ -4,14 +4,27 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import "./index.css";
 import reportWebVitals from "./reportWebVitals";
+import {
+  BrowserRouter as Router,
+  Route,
+  Link,
+  Routes,
+  BrowserRouter,
+} from "react-router-dom";
 import Search from "./pages/search/search";
+import Player from "./pages/player/player";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
 );
 root.render(
   <React.StrictMode>
-    <Search />
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Search />} />
+        <Route path="/player" element={<Player />} />
+      </Routes>
+    </BrowserRouter>
   </React.StrictMode>
 );
 

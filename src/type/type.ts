@@ -3,6 +3,8 @@ export type mVideo = {
   videoId: string;
   videoType: VideoType;
   collectionId?: string;
+  thumbnailUrl?: string;
+  channelTitle?: string;
 };
 
 export enum VideoType {
