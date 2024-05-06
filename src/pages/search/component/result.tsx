@@ -53,22 +53,37 @@ function Result(props: { query?: string }) {
   };
 
   return (
-    <>
-      query: {props.query}
-      <ul>
+    <div className="searchResults">
+      <div className="searchResultsWrapper grid gap-1 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {searchResults &&
           searchResults.map((item) => (
-            <div key={item.videoId}>
-              <p>{item.videoId}</p>
-              <p>{item.videoTitle}</p>
-              <p>{item.channelTitle}</p>
-              <img src={item.thumbnailUrl} alt={item.videoTitle} />
-              <button onClick={() => requestVideo(item)}>この曲を追加</button>
-              <hr />
+            <div
+              className="searchResult m-4 max-w-sm rounded overflow-hidden shadow-lg"
+              key={item.videoId}
+            >
+              <img
+                className="thumbnail w-full"
+                src={item.thumbnailUrl}
+                alt={item.videoTitle}
+              />
+              <div className="px-6 py-4">
+                <p className="title font-bold text-xl mb-2">
+                  {item.videoTitle}
+                </p>
+                <p className="channel text-gray-700 text-base">
+                  {item.channelTitle}
+                </p>
+                <button
+                  className="addButton w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                  onClick={() => requestVideo(item)}
+                >
+                  この曲を追加
+                </button>
+              </div>
             </div>
           ))}
-      </ul>
-    </>
+      </div>
+    </div>
   );
 }
 export default Result;
