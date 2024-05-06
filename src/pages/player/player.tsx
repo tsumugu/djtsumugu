@@ -12,6 +12,7 @@ function Player() {
   const [videoIds, setVideoIds] = useState<mVideo[]>();
   const [videoIdsFromPlaylist, setVideoIdsFromPlaylist] = useState<mVideo[]>();
   const [videoIdsFromRequest, setVideoIdsFromRequest] = useState<mVideo[]>();
+  const [nowPlaying, setNowPlaying] = useState<mVideo>();
 
   ////////////////////////////////////
   // プレイリストとDBから動画を読み込む　//
@@ -95,6 +96,7 @@ function Player() {
       const tmpVideoIds = videoIds;
       tmpVideoIds.shift();
       setVideoIds(tmpVideoIds);
+      setNowPlaying(videoIds[0]);
       loadVideo(YTPlayer, videoIds[0].videoId);
     }
   };
@@ -103,6 +105,7 @@ function Player() {
   const onPlayerReady: YouTubeProps["onReady"] = (event) => {
     setYTPlayer(event.target);
     if (videoIds) {
+      setNowPlaying(videoIds[0]);
       loadVideo(event.target, videoIds[0].videoId);
     }
   };
@@ -133,6 +136,11 @@ function Player() {
         onReady={onPlayerReady}
         onEnd={onPlayerEnd}
       />
+      <p>
+        {nowPlaying?.videoType === VideoType.request
+          ? "リクエストされた曲"
+          : ""}
+      </p>
       <button onClick={onPlayerEnd}>次の曲へ</button>
     </>
   );
