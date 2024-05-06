@@ -7,7 +7,6 @@ import reportWebVitals from "./reportWebVitals";
 import {
   BrowserRouter as Router,
   Route,
-  Link,
   Routes,
   BrowserRouter,
 } from "react-router-dom";
@@ -19,12 +18,12 @@ const root = ReactDOM.createRoot(
 );
 root.render(
   <React.StrictMode>
-    <BrowserRouter>
+    <Router>
       <Routes>
         <Route path="/" element={<Search />} />
         <Route path="/player" element={<Player />} />
       </Routes>
-    </BrowserRouter>
+    </Router>
   </React.StrictMode>
 );
 
